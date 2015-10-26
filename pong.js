@@ -37,22 +37,22 @@ window.onload = function() {
     brestartar.addEventListener('click', restartar);
 	
 	ball = {
-		x:canvas.width/2,
-		y:canvas.height/2,
-		radius:10,
-		speed:0.2,
-		dx:1,
-		dy:-1,
+		x: canvas.width/2,
+		y: canvas.height/2,
+		radius: 10,
+		speed: 0.2,
+		dx: 1,
+		dy: -1,
 		color: "blue"
 	};
 	
 	ball2 = {
-		x:canvas.width/2,
-		y:canvas.height/2,
-		radius:10,
-		speed:-0.2,
-		dx:1,
-		dy:-1,
+		x: canvas.width/2,
+		y: canvas.height/2,
+		radius: 10,
+		speed: 0.2,
+		dx: 1,
+		dy: -1,
 		color: "green"
 	};
 
@@ -304,8 +304,8 @@ function drawBall() {
 
     if(numBolas == 2){
 		ctx.beginPath();
-		ctx.arc(ball2.x, ball.y, ball.radius, 0, Math.PI*2, true);
-		ctx.fillStyle = ball.color;
+		ctx.arc(ball2.x, ball2.y, ball2.radius, 0, Math.PI*2, true);
+		ctx.fillStyle = ball2.color;
 		ctx.fill();
 	    //ctx.drawImage(ballImg, ball.x-ball.radius, ball.y, 2*ball.radius, 1.5*ball.radius);
 		ctx.closePath();
