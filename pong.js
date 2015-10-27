@@ -5,14 +5,13 @@ var vidas = 5;
 var vitorias = 0;
 var animate = true;
 
-var ball1;
+var ball;
 var ball2;
 var balls;
 var paddle;
 var controller;
 var brickData;
 var bricks;
-var ballImg;
 var numBolas = 1;
 
 window.onload = function() {
@@ -22,9 +21,6 @@ window.onload = function() {
 	
 	document.addEventListener('keydown', keyHandler);
 	document.addEventListener('keyup', keyHandler);
-
-	ballImg = document.createElement('img');
-	ballImg.src = 'bola.png';
 
 	var menu = document.getElementById("menu");
 	var bplay = document.getElementById("bplay");
@@ -36,6 +32,7 @@ window.onload = function() {
     bpause.addEventListener('click', pararAnimacao);
     brestartar.addEventListener('click', restartar);
 	
+	//propriedades da ball 1
 	ball = {
 		x: canvas.width/2,
 		y: canvas.height/2,
@@ -45,7 +42,8 @@ window.onload = function() {
 		dy: -1,
 		color: "blue"
 	};
-	
+
+	//propriedades da ball 2, criada ao pressionar a tecla espaco	
 	ball2 = {
 		x: canvas.width/2,
 		y: canvas.height/2,
@@ -56,10 +54,12 @@ window.onload = function() {
 		color: "green"
 	};
 
+	//preenche manualmente o vetor com ball 1 e ball 2
 	balls = [];
 	balls[0] = ball;
 	balls[1] = ball2;
 
+	//propriedades do paddle
 	paddle = {
 		x:canvas.width/2 - 35,
 		y:canvas.height - 10,
@@ -68,6 +68,7 @@ window.onload = function() {
 		speed:0.5
 	};
 	
+	//propriedades dos bricks
 	brickData = {
 		count:7,
 		width:60,
@@ -76,6 +77,7 @@ window.onload = function() {
 		top:40
 	};
 	
+	//controlador do paddle
 	controller = {
 		right:false,
 		left:false
@@ -87,11 +89,13 @@ window.onload = function() {
 	requestAnimationFrame(onFrame);
 }
 
+//funcao chamada frame a frame para 
 function onFrame(timeStamp) {
 	var delta = getDeltaTime(timeStamp);
 	
 	if(animate)
 		update(delta);
+
 	draw();
 	
 	requestAnimationFrame(onFrame);
@@ -113,17 +117,21 @@ function update(delta) {
 			if (balls[i].x > paddle.x && balls[i].x < paddle.x + paddle.width)
 				balls[i].dy = -1;
 			else if (balls[i].y > canvas.height + balls[i].radius) {
-				console.log('Cadê essa feminilidade?');
-
-				var vhtml = document.getElementById('vidas');
-				vidas -= 1;
-				vhtml.innerHTML = " &nbsp; Vidas Restantes: " + vidas;
-				//document.location.reload();
-				if(vidas >=0){
-					restore();
+				if(numBolas > 1){
+					console.log("removeu");
+					removerBola(balls[i].color);
 				} else {
-					animate = false;
-					abrirDialogo();
+					var vhtml = document.getElementById('vidas');
+					vidas -= 1;
+					vhtml.innerHTML = " &nbsp; Vidas Restantes: " + vidas;
+					//document.location.reload();
+					if(vidas >=0){
+						console.log("chamei restore");
+						restore();
+					} else {
+						animate = false;
+						abrirDialogoPerca();
+					}
 				}
 			}
 		}
@@ -140,20 +148,20 @@ function update(delta) {
 	for (var i=0; i<bricks.length; i++) {
 		brick = bricks[i];
 		
-		if (ball.x > brick.x && ball.x < brick.x + brick.width
-		&& ball.y > brick.y && ball.y < brick.y + brick.height) {
-			bricks.splice(i, 1);
-			ball.dy *= -1;
+		for(var j=0; j<numBolas; j++){
+			if (balls[j].x > brick.x && balls[j].x < brick.x + brick.width
+			&& balls[j].y > brick.y && balls[j].y < brick.y + brick.height) {
+				bricks.splice(i, 1);
+				balls[j].dy *= -1;
+			}
 		}
 	}
 	
 	//win condition
 	if (bricks.length === 0) {
-		alert('A senhora é destruidora mesmo, viu viado?!');
 		var vhtml = document.getElementById('vitorias');
 		vitorias += 1;
 		vhtml.innerHTML = "&nbsp; Vitorias: " + vitorias;
-		//document.location.reload();
 		restore();
 
 	}
@@ -245,7 +253,26 @@ function modificarBola(event) {
 	}
 }
 
-function abrirDialogo() {
+//abre dialogo informando que jogador nao possui mais "vidas"
+function abrirDialogoPerca() {
+	document.getElementById('quadro').innerHTML = '<a href="#openModal" id="link">'
+	+ '</a><div id="openModal" class="modalDialog">'
+	+ '<div><a href="#close" title="Close" class="close">X</a>'
+	+ '<p id="dialogo"> <br> Você não possui mais vidas. <br><br></p>'
+	+ '<img src="perdeu.jpg" height="250" width="250">'
+	+ '<p><br><br> <button><a href="javascript:document.location.reload();">Reiniciar</a></button></div></div>';
+
+	var el = document.getElementById('link');
+
+	if (document.createEvent) {
+    	var event = document.createEvent("MouseEvents");
+    	event.initEvent("click", true, true);
+    	el.dispatchEvent(event);
+	}
+}
+
+//abre dialogo parabenizando jogador pela sua vitoria
+function abrirDialogoPerca() {
 	document.getElementById('quadro').innerHTML = '<a href="#openModal" id="link">'
 	+ '</a><div id="openModal" class="modalDialog">'
 	+ '<div><a href="#close" title="Close" class="close">X</a>'
@@ -262,6 +289,7 @@ function abrirDialogo() {
 	}
 }
 
+//recria bricks
 function restoreBricks() {
 	brickData.count = 7;
 	
@@ -276,16 +304,26 @@ function restoreBricks() {
 	}
 }
 
+//reseta todos os parametros de posicao das bolas e dos bricks, para que o jogo possa ser reiniciado
 function restore() {
-	ball.x = canvas.width/2;
-	ball.y = canvas.height/2;
-	ball.dx = 1;
-	ball.dy = -1;
+
+	balls[0] = ball;
+	balls[1]= ball2;
+	
+	for(var i=0; i< 2; i++){
+		balls[i].x = canvas.width/2;
+		balls[i].y = canvas.height/2;
+		balls[i].dx = 1;
+		balls[i].dy = -1;	
+	}
+
+	numBolas = 1;
 
 	drawBall();
 	restoreBricks();
 }
 
+//desenha elementos no canvas
 function draw() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
@@ -294,24 +332,19 @@ function draw() {
 	drawBricks();
 }
 
+//funcao responsavel por desenhar a bola
 function drawBall() {
-	ctx.beginPath();
-	ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2, true);
-	ctx.fillStyle = ball.color;
-	ctx.fill();
-    //ctx.drawImage(ballImg, ball.x-ball.radius, ball.y, 2*ball.radius, 1.5*ball.radius);
-    ctx.closePath();
 
-    if(numBolas == 2){
+	for(var i = 0; i < numBolas; i++) {
 		ctx.beginPath();
-		ctx.arc(ball2.x, ball2.y, ball2.radius, 0, Math.PI*2, true);
-		ctx.fillStyle = ball2.color;
+		ctx.arc(balls[i].x, balls[i].y, balls[i].radius, 0, Math.PI*2, true);
+		ctx.fillStyle = balls[i].color;
 		ctx.fill();
-	    //ctx.drawImage(ballImg, ball.x-ball.radius, ball.y, 2*ball.radius, 1.5*ball.radius);
 		ctx.closePath();
 	}
 }
 
+//desenha paddle
 function drawPaddle() {
 	ctx.beginPath();
 	ctx.rect(paddle.x, paddle.y, paddle.width, paddle.height);
@@ -320,6 +353,7 @@ function drawPaddle() {
 	ctx.closePath();
 }
 
+//desenha bricks
 function drawBricks() {
 	var brick;
 	for (var i=0; i<bricks.length; i++) {
@@ -332,6 +366,8 @@ function drawBricks() {
 	}
 }
 
+//controlador de teclado, detecta se setas sao pressionadas (para mover o paddle)
+//ou se espaco foi pressionada (para criar nova bola)
 function keyHandler(event) {
 	if (event.key === 'ArrowRight')
 		controller.right = (event.type === 'keydown');
@@ -341,9 +377,38 @@ function keyHandler(event) {
 		numBolas = 2;
 }
 
+//corrige atualização de tempo do canvas
 function getDeltaTime(timeStamp) {
 	delta  = timeStamp - timeBefore;
 	timeBefore = timeStamp;
 	
 	return delta;
 }
+
+//se apenas uma bola "cai", remove-a do canvas
+function removerBola(cor) {
+	if(cor == "blue"){
+		balls[0] = balls[1];
+	}
+
+	numBolas -= 1;
+}
+
+
+//------- Move o Paddle em Relação ao Mouse ------
+function readMouseMove(e){
+	// var result_x = document.getElementById('x_result');
+	// var result_y = document.getElementById('y_result');
+	// result_x.innerHTML = e.clientX;
+	// result_y.innerHTML = e.clientY;
+	var oldx = e.clientX;
+	console.log(e.clientX);
+	console.log(e.clientY);
+
+	if(e.clientX - oldx > 0){
+		paddle.x = paddle.x - (e.clientX - oldx)/100;
+	} else {
+		//controller.right = true;
+	}
+}
+document.onmousemove = readMouseMove;
